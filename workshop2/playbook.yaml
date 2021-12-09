@@ -1,0 +1,104 @@
+- name: setup server
+  hosts: all
+  tasks:
+    - name: Install mandatory packages
+      apt:
+        update_cache: yes
+        name: "{{ item }}"
+        state: latest
+      loop:
+        - ca-certificates
+        - curl
+        - gnupg
+        - lsb-release
+        - software-properties-common
+        - curl
+        - zip
+        - git
+        - nginx
+    - name: Add Docker apt key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+    - name: Add repositories
+      apt_repository:
+        repo: "{{ item }}"
+        state: present
+      loop:
+      - "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
+      - "ppa:ansible/ansible"
+    - name: Install Docker and Ansible
+      apt:
+        update_cache: yes
+        name: "{{ item }}"
+        state: latest
+      loop:
+      - docker-ce 
+      - docker-ce-cli 
+      - containerd.io
+      - ansible
+    - name: Install hasicorp tools
+      unarchive:
+        src: "{{ item }}"
+        dest: /usr/local/bin
+        remote_src: yes
+        mode: "a+x"
+      loop:
+      - https://releases.hashicorp.com/terraform/1.1.0/terraform_1.1.0_linux_amd64.zip
+      - https://releases.hashicorp.com/packer/1.7.8/packer_1.7.8_linux_amd64.zip
+    - name: Install docker-machine
+      get_url:
+        url: https://gitlab-docker-machine-downloads.s3.amazonaws.com/main/docker-machine-Linux-x86_64
+        dest: /usr/local/bin/docker-machine
+        mode: "a+x"
+    - name: Create user fred
+      user:
+        name: fred
+        shell: /bin/bash
+        groups: docker,sudo
+        append: yes
+        state: present
+    - name: add ssh keys to fred
+      authorized_key:
+        user: fred
+        state: present
+        key: "{{ lookup('file', 'mykeyy.pub') }}"
+    
+    - name: add instructor ssh keys to fred
+      authorized_key:
+        user: fred
+        state: present
+        key: https://drive.google.com/u/0/uc?id=17pBBYJhRkyrfVhLu44e23CA2PbeXPuMg&export=download
+    
+    - name: List all files in /var/www/html
+      find:
+        paths: /var/www/html
+        recurse: yes
+      register: html_files
+
+    - name: echo html_files
+      debug:
+        msg: " >>> {{ html_files }}"
+    
+    - name: delete files from /var/www/html
+      file:
+        name: "{{ item.path }}"
+        state: absent
+      loop: "{{ html_files.files }}"
+    - name: copy files
+      copy:
+        src: ./nginx-assets/
+        dest: /var/www/html/
+    
+    - name: Start nginx
+      systemd:
+        name: nginx
+        enabled: true
+        state: restarted
+    - name: Install all recommended patches
+      apt:
+        update_cache: yes
+        upgrade: dist
+        state: latest
+    #- name: reboot system
+    #  reboot:

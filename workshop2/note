@@ -1,0 +1,10 @@
+provision a droplet
+
+- size: s-1vcpu-1gb
+- image: ubuntu-20-04-x64
+- region:sgp1
+
+Terraform to provision
+Ansible to configure the droplet to the requirements of the pre-course assignment
+
+automate task 2 to 7 with Ansible
