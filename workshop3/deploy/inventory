@@ -1,0 +1,9 @@
+all:
+  hosts:
+    code-server-droplet:
+      ansible_host: 159.223.45.113
+      ansible_connection: ssh
+      ansible_user: root
+      ansible_ssh_private_key_file: /home/fred/aipc/workshop3/mykey
+      public_key: /home/fred/aipc/workshop3/mykey.pub
+      cs_password: password123

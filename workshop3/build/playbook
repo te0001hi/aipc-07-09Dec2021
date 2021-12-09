@@ -1,0 +1,66 @@
+- name: Install code-server
+  hosts: all
+  vars:
+    cs_archive: "https://github.com/cdr/code-server/releases/download/v3.12.0/code-server-3.12.0-linux-amd64.tar.gz"
+    cs_dir: "code-server-3.12.0-linux-amd64"
+    template_file:
+    - src: templates/code-server.service
+      dest: /lib/systemd/system/code-server.service
+    - src: templates/code-server.conf
+      dest: /etc/nginx/sites-available/code-server.conf
+  tasks:
+  - name: Create a directory
+    file:
+      path: "{{ item }}"
+      state: directory
+      mode: 0755
+    loop:
+    - /var/lib/code-server
+    - /usr/local/opt
+  - name: Download CS archive
+    unarchive:
+      src: "{{ cs_archive }}"
+      dest: /usr/local/opt/
+      remote_src: yes
+  - name: Rename to code-server
+    copy:
+      src: "/usr/local/opt/{{ cs_dir }}/"
+      dest: /usr/lib/code-server
+      remote_src: yes
+  - name: create link to code-server bin
+    file:
+      src: /usr/lib/code-server/bin/code-server
+      dest: /usr/bin/code-server
+      state: link
+
+  - name: install nginx
+    apt:
+      name: nginx
+      update_cache: true
+      state: latest
+
+  - name: Copy local to remote
+    copy:
+      src: "{{ item.src }}"
+      dest: "{{ item.dest }}"
+    loop: "{{ template_file }}"
+
+  - name: Link to site-enabled
+    file:
+      src: /etc/nginx/sites-available/code-server.conf 
+      dest: /etc/nginx/sites-enabled/code-server.conf
+      state: link
+
+  - name: Enable services
+    systemd:
+      name: "{{ item }}"
+      enabled: true
+    loop:
+    - nginx
+    - code-server
+
+  - name: Install all latest patches for the system
+    apt:
+      update_cache:
+      upgrade: dist
+      state: latest
