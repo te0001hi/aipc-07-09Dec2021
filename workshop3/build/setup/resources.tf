@@ -2,7 +2,7 @@ data digitalocean_ssh_key mykey {
     name = "mykeyy"
 }
 
-// Server - Nginx
+//Server - Nginx
 resource digitalocean_droplet setup-droplet {
     name = "setup-droplet"
     image = var.DO_image

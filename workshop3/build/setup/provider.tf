@@ -10,7 +10,7 @@ terraform {
             version = "2.1.0"
         }
   }
-}
+} 
 
 provider "digitalocean" {
     token = var.DO_token

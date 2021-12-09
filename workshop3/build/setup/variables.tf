@@ -3,7 +3,7 @@ variable DO_token {
     sensitive = true
 }
 
-variable DO_image {
+variable DO_image { 
     type = string
     default = "ubuntu-20-04-x64"
 }
